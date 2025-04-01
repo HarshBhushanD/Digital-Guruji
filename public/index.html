@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinterest Infographic Generator</title>
+    <style>
+        :root {
+            --primary-color: #0c6b6b;
+            --secondary-color: #d1e8e8;
+            --text-color: #333;
+            --background-color: #f4f9f9;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+        
+        .controls {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .preview {
+            flex: 2;
+            position: relative;
+        }
+        
+        .infographic {
+            width: 600px;
+            margin: 0 auto;
+            background-color: var(--background-color);
+            box-shadow: var(--box-shadow);
+            border-radius: 8px;
+            overflow: hidden;
+            padding-bottom: 40px;
+            transform-origin: top left;
+        }
+        
+        .infographic-title {
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            background-color: var(--primary-color);
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .number-box {
+            width: 120px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            font-weight: bold;
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .timeline-item:nth-child(odd) .number-box {
+            margin-left: 30px;
+        }
+        
+        .timeline-item:nth-child(even) .number-box {
+            margin-right: 30px;
+            order: 2;
+        }
+        
+        .connector {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary-color);
+            left: 50%;
+            top: 50px;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+        
+        .content-box {
+            width: 50%;
+            padding: 20px;
+        }
+        
+        .timeline-item:nth-child(odd) .content-box {
+            text-align: right;
+            padding-right: 40px;
+        }
+        
+        .timeline-item:nth-child(even) .content-box {
+            text-align: left;
+            padding-left: 40px;
+        }
+        
+        .content-title {
+            color: var(--primary-color);
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .content-text {
+            color: var(--text-color);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, 
+        .form-group textarea, 
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.active {
+            border-color: #333;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        #addItemBtn {
+            background-color: #28a745;
+        }
+        
+        #downloadBtn {
+            background-color: #007bff;
+        }
+        
+        .scale-controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .scale-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .template-selection {
+            margin-bottom: 20px;
+        }
+        
+        .template-option {
+            display: inline-block;
+            width: 80px;
+            height: 50px;
+            margin-right: 10px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .template-option.active {
+            border-color: var(--primary-color);
+        }
+        :root {
+    --primary-color: #006666;
+    --secondary-color: #d1e8e8;
+    --text-color: #333;
+    --background-color: #f4f9f9;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #f0f0f0;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 20px;
+}
+
+.controls {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--box-shadow);
+}
+
+.preview {
+    flex: 2;
+    position: relative;
+}
+
+.infographic {
+    width: 600px;
+    margin: 0 auto;
+    background-color: var(--background-color);
+    box-shadow: var(--box-shadow);
+    border-radius: 8px;
+    overflow: hidden;
+    padding-bottom: 40px;
+    transform-origin: top left;
+}
+
+.infographic-title {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 36px;
+    font-family: 'Pacifico', 'Brush Script MT', cursive;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    background-color: var(--primary-color);
+    transform: translateX(-50%);
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 60px;
+    position: relative;
+}
+
+.number-box {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 120px;
+    font-weight: bold;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-item:nth-child(odd) .number-box {
+    margin-left: 30px;
+}
+
+.timeline-item:nth-child(even) .number-box {
+    margin-right: 30px;
+    order: 2;
+}
+
+.connector {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-color: var(--primary-color);
+    left: 50%;
+    top: 60px;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.content-box {
+    width: 50%;
+    padding: 20px;
+}
+
+.timeline-item:nth-child(odd) .content-box {
+    text-align: right;
+    padding-right: 40px;
+}
+
+.timeline-item:nth-child(even) .content-box {
+    text-align: left;
+    padding-left: 40px;
+}
+
+.content-title {
+    color: var(--primary-color);
+    font-size: 22px;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.content-text {
+    color: var(--text-color);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.color-picker {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.color-option.active {
+    border-color: #333;
+}
+
+.btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#addItemBtn {
+    background-color: #28a745;
+}
+
+#downloadBtn {
+    background-color: #007bff;
+}
+
+.scale-controls {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.scale-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 0 5px;
+}
+
+.template-selection {
+    margin-bottom: 20px;
+}
+
+.template-option {
+    display: inline-block;
+    width: 80px;
+    height: 50px;
+    margin-right: 10px;
+    border: 2px solid #ddd;
+    cursor: pointer;
+}
+
+.template-option.active {
+    border-color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .infographic {
+        width: 100%;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h2>Infographic Controls</h2>
+            
+            <div class="form-group">
+                <label for="infographicTitle">Title</label>
+                <input type="text" id="infographicTitle" value="Harnessing Infographics for Effective Pinterest Marketing">
+            </div>
+            
+            <div class="form-group">
+                <label>Color Scheme</label>
+                <div class="color-picker">
+                    <div class="color-option active" style="background-color: #0c6b6b;" data-primary="#0c6b6b" data-secondary="#d1e8e8"></div>
+                    <div class="color-option" style="background-color: #5b3256;" data-primary="#5b3256" data-secondary="#f0d9ed"></div>
+                    <div class="color-option" style="background-color: #1a5276;" data-primary="#1a5276" data-secondary="#d4e6f1"></div>
+                    <div class="color-option" style="background-color: #7d6608;" data-primary="#7d6608" data-secondary="#fcf3cf"></div>
+                    <div class="color-option" style="background-color: #196f3d;" data-primary="#196f3d" data-secondary="#d4efdf"></div>
+                </div>
+            </div>
+            
+            <div id="timelineItems">
+                <!-- Timeline item controls will be generated here -->
+            </div>
+            
+            <div class="btn-group">
+                <button id="addItemBtn" class="btn">Add Item</button>
+                <button id="downloadBtn" class="btn">Generate & Download</button>
+            </div>
+        </div>
+        
+        <div class="preview">
+            <div class="scale-controls">
+                <button class="scale-btn" id="zoomOut">-</button>
+                <span id="scaleValue">100%</span>
+                <button class="scale-btn" id="zoomIn">+</button>
+            </div>
+            
+            <div id="infographicContainer" class="infographic">
+                <div class="infographic-title" id="titleDisplay">Harnessing Infographics for Effective Pinterest Marketing</div>
+                
+                <div class="timeline" id="timelineContainer">
+                    <!-- Timeline items will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default timeline items
+        const defaultItems = [
+            {
+                number: 1,
+                title: "Enhancing Visual Appeal",
+                content: "Infographics leverage visually appealing designs, which can capture users' attention quickly on Pinterest's image-centric platform. This visual aspect can lead to increased engagement and higher pin rates."
+            },
+            {
+                number: 2,
+                title: "Simplifying Complex Information",
+                content: "Infographics simplify complex data and concepts into digestible visual formats. This is particularly useful for e-commerce brands or service providers looking to explain products or services quickly."
+            },
+            {
+                number: 3,
+                title: "Boosting Brand Awareness",
+                content: "Consistent use of infographics helps in building brand identity. By using specific colors, fonts, and styles, brands can create a distinct visual language that resonates with users and enhances recall."
+            },
+            {
+                number: 4,
+                title: "Encouraging Shares and Saves",
+                content: "Infographics are highly shareable content; they encourage users to save, pin, or share them due to their informative nature. This can lead to organic reach and visibility on Pinterest."
+            },
+            {
+                number: 5,
+                title: "Driving Traffic to Websites",
+                content: "Infographics can include call-to-actions (CTAs) linking back to your website or landing page, facilitating the conversion of Pinterest users into website visitors, thus driving traffic effectively."
+            },
+            {
+                number: 6,
+                title: "Leveraging SEO Benefits",
+                content: "When properly tagged with keywords and descriptions, infographics can enhance SEO on Pinterest. This can improve discoverability, making it easier for users interested in specific topics to find your pins."
+            },
+            {
+                number: 7,
+                title: "Creating Educational Content",
+                content: "Infographics can serve as educational tools or tutorials, providing value to your audience. This type of informative content can establish authority in your niche and attract a loyal following."
+            }
+        ];
+        
+        // Track the current scale
+        let currentScale = 1;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeControls();
+            renderTimelineItems();
+            
+            // Set up event listeners
+            document.getElementById('infographicTitle').addEventListener('input', updateTitle);
+            document.getElementById('addItemBtn').addEventListener('click', addNewItem);
+            document.getElementById('downloadBtn').addEventListener('click', generateAndDownload);
+            document.getElementById('zoomIn').addEventListener('click', zoomIn);
+            document.getElementById('zoomOut').addEventListener('click', zoomOut);
+            
+            // Color scheme selection
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    updateColorScheme(this.dataset.primary, this.dataset.secondary);
+                });
+            });
+        });
+        
+        // Initialize the controls for existing items
+        function initializeControls() {
+            const container = document.getElementById('timelineItems');
+            container.innerHTML = '';
+            
+            defaultItems.forEach((item, index) => {
+                container.appendChild(createItemControl(item, index));
+            });
+        }
+        
+        // Create form controls for a timeline item
+        function createItemControl(item, index) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'timeline-item-control';
+            itemDiv.innerHTML = `
+                <h4>Item #${index + 1}</h4>
+                <div class="form-group">
+                    <label for="itemTitle${index}">Title</label>
+                    <input type="text" id="itemTitle${index}" value="${item.title}" data-index="${index}">
+                </div>
+                <div class="form-group">
+                    <label for="itemContent${index}">Content</label>
+                    <textarea id="itemContent${index}" data-index="${index}">${item.content}</textarea>
+                </div>
+                <button class="btn" onclick="removeItem(${index})">Remove</button>
+                <hr style="margin: 15px 0;">
+            `;
+            
+            // Add event listeners to inputs
+            setTimeout(() => {
+                itemDiv.querySelector(`#itemTitle${index}`).addEventListener('input', updateItemTitle);
+                itemDiv.querySelector(`#itemContent${index}`).addEventListener('input', updateItemContent);
+            }, 0);
+            
+            return itemDiv;
+        }
+        
+        // Render the timeline items on the infographic
+        function renderTimelineItems() {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = '';
+            
+            defaultItems.forEach(item => {
+                const itemElement = createTimelineItem(item);
+                container.appendChild(itemElement);
+            });
+        }
+        
+        // Create a single timeline item element
+        function createTimelineItem(item) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'timeline-item';
+            
+            itemDiv.innerHTML = `
+                <div class="number-box">${item.number}</div>
+                <div class="connector"></div>
+                <div class="content-box">
+                    <div class="content-title">${item.title}</div>
+                    <div class="content-text">${item.content}</div>
+                </div>
+            `;
+            
+            return itemDiv;
+        }
+        
+        // Update the title of the infographic
+        function updateTitle() {
+            const title = document.getElementById('infographicTitle').value;
+            document.getElementById('titleDisplay').textContent = title;
+        }
+        
+        // Update a timeline item's title
+        function updateItemTitle(e) {
+            const index = parseInt(e.target.dataset.index);
+            defaultItems[index].title = e.target.value;
+            renderTimelineItems();
+        }
+        
+        // Update a timeline item's content
+        function updateItemContent(e) {
+            const index = parseInt(e.target.dataset.index);
+            defaultItems[index].content = e.target.value;
+            renderTimelineItems();
+        }
+        
+        // Add a new timeline item
+        function addNewItem() {
+            const newItem = {
+                number: defaultItems.length + 1,
+                title: "New Item",
+                content: "Add your content here."
+            };
+            
+            defaultItems.push(newItem);
+            const container = document.getElementById('timelineItems');
+            container.appendChild(createItemControl(newItem, defaultItems.length - 1));
+            renderTimelineItems();
+        }
+        
+        // Remove a timeline item
+        function removeItem(index) {
+            defaultItems.splice(index, 1);
+            
+            // Renumber the items
+            defaultItems.forEach((item, i) => {
+                item.number = i + 1;
+            });
+            
+            initializeControls();
+            renderTimelineItems();
+        }
+        
+        // Update the color scheme
+        function updateColorScheme(primary, secondary) {
+            document.documentElement.style.setProperty('--primary-color', primary);
+            document.documentElement.style.setProperty('--secondary-color', secondary);
+        }
+        
+        // Zoom in the preview
+        function zoomIn() {
+            if (currentScale < 1.5) {
+                currentScale += 0.1;
+                updateScale();
+            }
+        }
+        
+        // Zoom out the preview
+        function zoomOut() {
+            if (currentScale > 0.5) {
+                currentScale -= 0.1;
+                updateScale();
+            }
+        }
+        
+        // Update the scale of the preview
+        function updateScale() {
+            const container = document.getElementById('infographicContainer');
+            container.style.transform = `scale(${currentScale})`;
+            document.getElementById('scaleValue').textContent = `${Math.round(currentScale * 100)}%`;
+        }
+//         // Generate and download the infographic
+// function generateAndDownload() {
+//     // Show loading indication
+//     document.getElementById('downloadBtn').textContent = 'Generating...';
+//     document.getElementById('downloadBtn').disabled = true;
+    
+//     // Reset scale to 100% for proper capture
+//     const originalScale = currentScale;
+//     currentScale = 1;
+//     updateScale();
+    
+//     // Capture the current styles and HTML
+//     const styles = Array.from(document.styleSheets)
+//         .map(sheet => {
+//             try {
+//                 return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+//             } catch (e) {
+//                 return '';
+//             }
+//         })
+//         .join('\n');
+    
+//     const title = document.getElementById('infographicTitle').value;
+    
+//     // Send to server
+//     fetch('/api/capture-screenshot', {
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({
+//             html: document.getElementById('infographicContainer').outerHTML,
+//             css: styles,
+//             title: title
+//         }),
+//     })
+//     .then(response => {
+//         if (!response.ok) {
+//             return response.json().then(err => Promise.reject(err));
+//         }
+//         return response.blob();
+//     })
+//     .then(blob => {
+//         // Create download link
+//         const url = window.URL.createObjectURL(blob);
+//         const a = document.createElement('a');
+//         a.style.display = 'none';
+//         a.href = url;
+//         a.download = `${title.replace(/ /g, '-')}.png`;
+//         document.body.appendChild(a);
+//         a.click();
+        
+//         // Clean up
+//         window.URL.revokeObjectURL(url);
+//         a.remove();
+        
+//         // Restore scale
+//         currentScale = originalScale;
+//         updateScale();
+//     })
+//     .catch(error => {
+//         console.error('Error generating infographic:', error);
+//         alert('Failed to generate the infographic. Please try again.');
+//     })
+//     .finally(() => {
+//         // Reset button
+//         document.getElementById('downloadBtn').textContent = 'Generate & Download';
+//         document.getElementById('downloadBtn').disabled = false;
+//     });
+// }
+
+// Generate and download the infographic
+function generateAndDownload() {
+    // Show loading indication
+    document.getElementById('downloadBtn').textContent = 'Generating...';
+    document.getElementById('downloadBtn').disabled = true;
+    
+    // Reset scale to 100% for proper capture
+    const originalScale = currentScale;
+    currentScale = 1;
+    updateScale();
+    
+    // Get the computed styles to capture current CSS variable values
+    const computedStyle = getComputedStyle(document.documentElement);
+    const primaryColor = computedStyle.getPropertyValue('--primary-color').trim();
+    const secondaryColor = computedStyle.getPropertyValue('--secondary-color').trim();
+    
+    // Get base styles from stylesheets
+    let styles = Array.from(document.styleSheets)
+        .map(sheet => {
+            try {
+                return Array.from(sheet.cssRules)
+                    .filter(rule => !rule.selectorText || rule.selectorText !== ':root')
+                    .map(rule => rule.cssText)
+                    .join('\n');
+            } catch (e) {
+                return '';
+            }
+        })
+        .join('\n');
+    
+    // Add current CSS variable values
+    const customVars = `
+    :root {
+        --primary-color: ${primaryColor};
+        --secondary-color: ${secondaryColor};
+        --text-color: #333;
+        --background-color: #f4f9f9;
+        --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }`;
+    
+    styles = customVars + styles;
+    
+    const title = document.getElementById('infographicTitle').value;
+    
+    // Send to server
+    fetch('/api/capture-screenshot', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            html: document.getElementById('infographicContainer').outerHTML,
+            css: styles,
+            title: title
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${title.replace(/ /g, '-')}.png`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        
+        // Restore scale
+        currentScale = originalScale;
+        updateScale();
+    })
+    .catch(error => {
+        console.error('Error generating infographic:', error);
+        alert('Failed to generate the infographic. Please try again.');
+    })
+    .finally(() => {
+        // Reset button
+        document.getElementById('downloadBtn').textContent = 'Generate & Download';
+        document.getElementById('downloadBtn').disabled = false;
+    });
+}
+        
+        // Generate and download the infographic
+        // function generateAndDownload() {
+        //     // Here we would normally send a request to the server to generate the image
+        //     // For now, let's just show an alert
+        //     alert("In a production environment, this would send a request to the server to capture a screenshot of the infographic and download it.");
+            
+        //     // Example AJAX request that would be used
+        //     /*
+        //     fetch('/api/capture-screenshot', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //         },
+        //         body: JSON.stringify({
+        //             html: document.getElementById('infographicContainer').outerHTML,
+        //             css: document.querySelector('style').textContent,
+        //             title: document.getElementById('infographicTitle').value
+        //         }),
+        //     })
+        //     .then(response => response.blob())
+        //     .then(blob => {
+        //         const url = window.URL.createObjectURL(blob);
+        //         const a = document.createElement('a');
+        //         a.style.display = 'none';
+        //         a.href = url;
+        //         a.download = 'pinterest-infographic.png';
+        //         document.body.appendChild(a);
+        //         a.click();
+        //         window.URL.revokeObjectURL(url);
+        //     })
+        //     .catch(error => console.error('Error generating infographic:', error));
+        //     */
+        
+    </script>
+</body>
+</html>
